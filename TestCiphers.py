@@ -17,37 +17,69 @@ cipherDecFunctions = {
     4: lambda cipher, cipherText: cipher.decrypt(cipherText, 'CTR'),
 }
 
-def openTestingFiles():
-    global smallFile
-    global mediumFile
-    global largeFile
-    global rawOutputFile
+dummyFiles = {
+    0: open(os.path.join(os.path.dirname(__file__), "testdata/1MB/dummy.txt"), "r").read(),
+    1: open(os.path.join(os.path.dirname(__file__), "testdata/128MB/dummy.txt"), "r").read(),
+    2: open(os.path.join(os.path.dirname(__file__), "testdata/1MB/dummy.txt"), "r").read()
+}
 
-    smallFile = open(os.path.join(os.path.dirname(__file__), "testdata/1MB/dummy.txt"), "r")
-    mediumFile = open(os.path.join(os.path.dirname(__file__), "testdata/128MB/dummy.txt"), "r")
-    largeFile = open(os.path.join(os.path.dirname(__file__), "testdata/1GB/dummy.txt"), "r")
-    rawOutputFile = open(os.path.join(os.path.dirname(__file__), "output/raw.txt"), "w")
+
+def openTestingFiles():
+    global rawOutputFile
+    rawOutputFile = open(os.path.join(os.path.dirname(__file__), "raw_output/raw.txt"), "w")
+
+
+def writeRawOutput(timeToEncrypt, timeToDecrypt, cipherName, cipherBlockModeIndex, fileSizeIndex):
+    fileSizes = {
+        0: "1MB",
+        1: "128MB",
+        2: "1GB"
+    }
+    cipherBlockModes = {
+        0: "CBC",
+        1: "ECB",
+        2: "CFB",
+        3: "OFB",
+        4: "CTR"
+    }
+
+    rawOutputFile.write(
+        "Time to encrypt with: " + cipherName + ":" + cipherBlockModes[cipherBlockModeIndex] + ":" + fileSizes[
+            fileSizeIndex] + " = " + str(timeToEncrypt) + "\n")
+    rawOutputFile.write(
+        "Time to decrypt with: " + cipherName + ":" + cipherBlockModes[cipherBlockModeIndex] + ":" + fileSizes[
+            fileSizeIndex] + " = " + str(timeToDecrypt) + "\n")
 
 
 def testAES():
-    aesCipher = AESCipher('aaaaaaqweqweqweasdawqawqswqawews') # 32 bit key
+    aesCipher = AESCipher('aaaaaaqweqweqweasdawqawqswqawews')  # 32 bit key
     i = 0
-    while i < 5:
-        t = time.perf_counter()
-        cipher = cipherEncFunctions[i](aesCipher, smallFile.read()) # encrypt the file
-        cipherDecFunctions[i](aesCipher, cipher) # decrypt the file
-        print("Time elapsed: " + str(time.perf_counter() - t))
-        i+=1
+    while i < 5:  # Run each scenario 5 times
+        for cipherEncDictKey, cipherEncDictValue in cipherEncFunctions.items():
+            for fileKey, fileValue in dummyFiles.items():
+                t = time.perf_counter()
+                cipher = cipherEncDictValue(aesCipher, fileValue)  # Encrypt the file
+                timeToEncrypt = time.perf_counter() - t
+                cipherDecFunctions[cipherEncDictKey](aesCipher, cipher)  # Decrypt the file
+                timeToDecrypt = time.perf_counter() - timeToEncrypt
+                writeRawOutput(timeToEncrypt, timeToDecrypt, "aes", cipherEncDictKey, fileKey)
+        i += 1
 
 def testDES3():
-    des3Cipher = DES3Cipher('aaaaaaqweqweqwea') # 16 bit key
+    des3Cipher = DES3Cipher('aaaaaaqweqweqwea')  # 16 bit key
     i = 0
-    while i < 5:
-        t = time.perf_counter()
-        cipher = cipherEncFunctions[i](des3Cipher, smallFile.read()) # encrypt the file
-        cipherDecFunctions[i](des3Cipher, cipher) # decrypt the file
-        print("Time elapsed: " + str(time.perf_counter() - t))
-        i+=1
+    while i < 5:  # Run each scenario 5 times
+        for cipherEncDictKey, cipherEncDictValue in cipherEncFunctions.items():
+            for fileKey, fileValue in dummyFiles.items():
+                t = time.perf_counter()
+                cipher = cipherEncDictValue(des3Cipher, fileValue)  # Encrypt the file
+                timeToEncrypt = time.perf_counter() - t
+                cipherDecFunctions[cipherEncDictKey](des3Cipher, cipher)  # Decrypt the file
+                timeToDecrypt = time.perf_counter() - timeToEncrypt
+                writeRawOutput(timeToEncrypt, timeToDecrypt, "3des", cipherEncDictKey, fileKey)
+        i += 1
+    rawOutputFile.close()
+
 
 openTestingFiles()
 testAES()
