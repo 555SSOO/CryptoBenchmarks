@@ -58,9 +58,11 @@ def testAES():
         for cipherEncDictKey, cipherEncDictValue in cipherEncFunctions.items():
             for fileKey, fileValue in dummyFiles.items():
                 t = time.perf_counter()
-                cipher = cipherEncDictValue(aesCipher, fileValue)  # Encrypt the file
+                cipher = cipherEncDictValue(aesCipher, "testttttttttttttt")  # Encrypt the file
+                print(cipher)
                 timeToEncrypt = time.perf_counter() - t
-                cipherDecFunctions[cipherEncDictKey](aesCipher, cipher)  # Decrypt the file
+                # cipherDecFunctions[cipherEncDictKey](aesCipher, cipher)  # Decrypt the file
+                print(cipherDecFunctions[cipherEncDictKey](aesCipher, cipher))
                 timeToDecrypt = time.perf_counter() - timeToEncrypt
                 writeRawOutput(timeToEncrypt, timeToDecrypt, "aes", cipherEncDictKey, fileKey)
         i += 1
@@ -83,4 +85,4 @@ def testDES3():
 
 openTestingFiles()
 testAES()
-testDES3()
+# testDES3()
